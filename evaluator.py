@@ -114,3 +114,46 @@ class Evaluator():
             ret = self.evaluate(result)
         l = list(ret.values())
         return sum(l) / len(l)
+
+    @staticmethod
+    def import_runfile(p: Path, column_target: Union[str, List[str]] = "doc_id"):
+        columns = ["topic_id", "Q0", "doc_id", "rank", "score", "run_name"]
+
+        if isinstance(column_target, str):
+            column_target = [column_target]
+        
+        ret = []
+        for col in column_target:
+            if col in columns:
+                v = columns.index(col)
+            else:
+                raise ValueError(f"unknown columns name: {column_target}")
+            run_dict: dict = {}
+            with open(p, "r") as fp:
+                for line in fp:
+                    ls = line.split()
+                    if ls[0] not in run_dict.keys():
+                        run_dict[ls[0]] = []
+                    run_dict.get(ls[0], []).append(ls[v])
+            ret.append(run_dict)
+        if len(ret) == 1:
+            return ret[0]
+        else:
+            return tuple(ret)
+
+    @staticmethod
+    def export_runfile(ret: Dict[str, str], scores: Dict[str, List[float]], run_name: str, p: Path, sep: str = " ") -> Path:
+        assert len(ret) == len(scores), "results and scores must be same length."
+        
+        w_str: List[str] = []
+        for k, v in ret.items():
+            for i in range(len(scores[k])-1):
+                assert float(scores[k][i]) >= float(scores[k][i+1])
+            for i, (d, s) in enumerate(zip(v, scores[k])):
+                w_str.append(sep.join([k, "Q0", d, str(i), str(s), run_name]) + "\n")
+        
+        with open(p, "w") as fp:
+            fp.writelines(w_str)
+        
+        return p
+            
