@@ -47,7 +47,7 @@ class Evaluator():
                 eval[k] = 0.0
         return eval
     
-    def success_at(self, result: Dict[str, List[str]], k: int = 10) -> Dict[str, float]:
+    def success_at(self, result: Dict[str, List[str]], k: int = 1000) -> Dict[str, float]:
         """
         Args:
             result (Dict[str, List[str]]):
@@ -69,6 +69,8 @@ class Evaluator():
                     eval[q] = 0.0
                 else:
                     eval[q] = 1.0
+            else:
+                eval[q] = 0.0
         return eval
     
     def evaluate_df(self, result: Dict[str, List[str]], q: Queries, c: Corpus, debug: bool = False) -> pd.DataFrame:
@@ -102,7 +104,13 @@ class Evaluator():
             "score_rank": score_rank
         })
 
-    def agg(self, result: Dict[str, List[str]]) -> float:
-        ret = self.evaluate(result)
+    def agg(self, result: Dict[str, List[str]], metrics: str = "dcg", **kwargs) -> float:
+        metrics = metrics.lower()
+        if metrics == "dcg":
+            ret = self.evaluate(result)
+        elif metrics == "success_at":
+            ret = self.success_at(result, **kwargs)
+        else:
+            ret = self.evaluate(result)
         l = list(ret.values())
         return sum(l) / len(l)
