@@ -33,7 +33,12 @@ class Corpus(TRECJsonlParser):
     
     def search_by_doc_id(self, id: Union[str, int]) -> int:
         df = self.get_df()
-        ret = df.query(f"doc_id=={int(id)}").index.tolist()
+        # DataFrameの型によってキャスト
+        if df.dtypes["doc_id"] == "O":
+            id = f"'{str(id)}'"
+        else:
+            id = int(id)
+        ret = df.query(f"doc_id=={id}").index.tolist()
         if len(ret) > 1 or len(ret) == 0:
             raise ValueError(f"id is not unique. (length: {len(ret)})")
         return ret[0]

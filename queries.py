@@ -76,7 +76,11 @@ class Queries(TRECJsonlParser):
 
     def search_by_id(self, id: Union[int, str]) -> int:
         df = self.get_df()
-        ret = df.query(f"id=={int(id)}").index.tolist()
+        if df.dtypes["id"] == "O":
+            id = f"'{str(id)}'"
+        else:
+            id = int(id)
+        ret = df.query(f"id=={id}").index.tolist()
         if len(ret) > 1 or len(ret) == 0:
             raise ValueError(f"id is not unique. (length: {len(ret)})")
         return ret[0]
